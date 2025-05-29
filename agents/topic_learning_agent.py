@@ -7,8 +7,8 @@ from langchain_groq import ChatGroq
 from loguru import logger
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'tool')))
  
-from youtube_search_tool import find_youtube_resources  
-from course_search_tool import find_online_courses
+from tool.youtube_search_tool import find_youtube_resources  
+from tool.course_search_tool import find_online_courses
 
 model= ChatGoogleGenerativeAI(model="gemini-2.0-flash")
 model2=ChatGroq(model='llama-3.1-8b-instant')

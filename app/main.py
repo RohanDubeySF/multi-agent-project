@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'agents')))
-from router_agent import router_agent_executer
+from agents.router_agent import router_agent_executer
 import streamlit as st
 from loguru import logger
 
