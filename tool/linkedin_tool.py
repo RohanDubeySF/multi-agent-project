@@ -5,8 +5,7 @@ from langchain_groq import ChatGroq
 from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 from prompt.linkedin_prompt import youtube_linkedin_prompt,article_linkedin_prompt
-load_dotenv()
-
+load_dotenv("utils/.env")
 model= ChatGoogleGenerativeAI(model="gemini-2.0-flash")
 model2=ChatGroq(model='llama-3.1-8b-instant')
 

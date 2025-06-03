@@ -1,7 +1,7 @@
 from youtube_search import YoutubeSearch
 from langchain_core.tools import tool
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv("utils/.env")
 import json
 from loguru import logger
 

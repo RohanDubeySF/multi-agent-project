@@ -6,10 +6,10 @@ from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
 from prompt.twitter_prompt import youtube_twitter_prompt, article_twitter_prompt
 from loguru import logger
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv("utils/.env")
 
 model= ChatGoogleGenerativeAI(model="gemini-2.0-flash")
-model2=ChatGroq(model='llama-3.1-8b-instant')
+model2=ChatGroq(model='llama-3.3-70b-versatile')
 
 @tool
 def youtube_twitter_post(summary:str)->str:

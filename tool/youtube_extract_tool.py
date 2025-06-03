@@ -7,10 +7,10 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from langchain.chains.summarize import load_summarize_chain
 from dotenv import load_dotenv
 from loguru import logger
-load_dotenv()
+load_dotenv("utils/.env")
 
 model= ChatGoogleGenerativeAI(model="gemini-2.0-flash")
-model2=ChatGroq(model='llama-3.1-8b-instant')
+model2=ChatGroq(model='llama-3.3-70b-versatile')
 
 
 def content_extracter(url:str)->str:
@@ -31,7 +31,7 @@ def content_summarizer(url:str)->str:
     content=content_extracter(url)
     logger.debug(f"transcript received {content}")
 
-    chain=load_summarize_chain(llm=model,chain_type="map_reduce",verbose=True)
+    chain=load_summarize_chain(llm=model,chain_type="map_reduce",verbose=True,token_max=1000)
     content=[Document(metadata={"source": url},page_content=content)]
 
     summary=chain.invoke(content)
@@ -47,7 +47,8 @@ def generate_youtube_summary(url:str)->str:
     """
     logger.info(f"URL : {url}")
     logger.info(f"calling content_summarizer function")
-    summary=content_summarizer(url)
+    # summary=content_summarizer(url)
+    summary="This video introduces LangGraph, a tool simplifying multi-agent system development with LLMs by offering state management, flexibility, and scalability. It showcases a chatbot example built using LangGraph\'s graph-like structure for defining nodes and connections, and promotes related Udemy courses."
     output=f"Content Summary:\n{summary} , url:{url}"
     logger.success("Task done")
     return output

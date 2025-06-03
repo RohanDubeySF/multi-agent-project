@@ -4,6 +4,10 @@ langchain-core
 langchain-community
 langchainhub
 
+#langgraph
+langgraph
+langgraph-checkpoint-sqlite
+
 # Anthropic Integration
 langchain-anthropic
 

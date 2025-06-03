@@ -3,7 +3,7 @@ import os
 from serpapi import GoogleSearch
 from loguru import logger
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv("utils/.env")
 
 @tool
 def find_online_courses(query:str)-> str:
