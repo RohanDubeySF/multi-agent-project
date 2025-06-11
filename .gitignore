@@ -26,3 +26,6 @@ outputs/
 
 #data
 logs/app.log
+
+#memory
+*.db*

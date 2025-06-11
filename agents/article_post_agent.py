@@ -13,20 +13,31 @@ from tool.reddit_tool import article_reddit_post
 from dotenv import load_dotenv
 load_dotenv("utils/.env")
 from loguru import logger
+import ast 
 
 model= ChatGoogleGenerativeAI(model="gemini-2.0-flash")
 
-def get_tool_output(intermediate_steps, tool_name: str) -> Optional[str]:
-    """Utility to extract output of a specific tool from agent trace."""
-    for action, result in intermediate_steps:
-        if action.tool == tool_name:
-            return result if isinstance(result, str) else str(result)
-    return None
+def clean_and_parse_agent_output(agent_output: str) -> dict:
+    # Step 1: Strip markdown-style code block markers
+    cleaned = agent_output.strip()
+    
+    # Remove starting ```json or ``` if present
+    if cleaned.startswith("```json"):
+        cleaned = cleaned[len("```json"):].strip()
+    elif cleaned.startswith("```"):
+        cleaned = cleaned[len("```"):].strip()
+    
+    # Remove ending ``` if present
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3].strip()
+    
+    # Step 2: Parse the string as a Python dict
+    return ast.literal_eval(cleaned)
 
 def article_post_content(query:str,intermediate_data: Optional[Dict[str, Any]] = None)->str:
     logger.info(f"Query received:{query}")
 
-    intermediate_data.get("last_summary") or ""
+    summary=intermediate_data.get("last_summary") or " "
 
     context = f"""
     You are an article-based social media post generation agent.
@@ -39,25 +50,28 @@ def article_post_content(query:str,intermediate_data: Optional[Dict[str, Any]] =
 
     Query: {query}
     Existing Summary (May be a Empty string or None based on query):\n{summary}
+
+    output format:
+    {{
+        "last_summary":"<summary of video>",
+        "Post content":"The final post for all asked platform in structure"
+    }}
     """
 
-    article_agent=initialize_agent(tools=[generate_article_summary,article_linkedin_post,article_twitter_post,article_reddit_post],llm=model,agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION ,verbose=True,return_intermediate_steps=True)
+    article_agent=initialize_agent(tools=[generate_article_summary,article_linkedin_post,article_twitter_post,article_reddit_post],llm=model,agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION ,verbose=True)
     
     logger.info(f"Final Query to agent :{context}")
 
     response = article_agent.invoke({"input":context})
-    intermediate_steps = response.get("intermediate_steps", [])
-    logger.debug(response)
 
-    if intermediate_data is not None:
-        article_summary = get_tool_output(intermediate_steps, "generate_article_summary")
-        if article_summary:
-            intermediate_data["last_summary"] = article_summary
-            logger.info("[Article Post Agent] Summary saved to memory.")
+    output=clean_and_parse_agent_output(response['output'])
+    logger.debug(output)
 
-        intermediate_data["last_post"] = response['output']
-        logger.success("[Article Post Agent] Post content saved to memory.")
+    if intermediate_data is not None:            
+        intermediate_data["last_summary"] = output["last_summary"]
+    
 
-    return response['output']
+    return output["Post content"]
+
 
     

@@ -22,37 +22,37 @@ def router_agent(query:str,chat_history: Optional[List[BaseMessage]] = None,
     logger.info(f"query: {query}")
 
     history_str= get_buffer_string(chat_history) if chat_history else " "
+    print(f" chat history {history_str}")
 
     prompt=router_prompt
 
     #logger.info(f"prompt entered to router {prompt.invoke({"query":query,"chat_history":history_str})}")
 
     chain=prompt | model | JsonOutputParser()
+    
     try:
-        routing_result = chain.invoke({
+        # Call the chain
+        raw_response = chain.invoke({
             "query": query,
             "chat_history": history_str,
             "intermediate_data": str(intermediate_data)
         })
-        result = routing_result if isinstance(routing_result, str) else routing_result
+        
+        logger.debug(f"[Router Agent] Raw LLM Output: {raw_response}")
+
+        # Validate and fallback
+        return {
+            "next_node": raw_response.get("next_node", "none"),
+            "query": raw_response.get("query", query),
+            "reset_keys": raw_response.get("reset_keys", []),
+            "response": raw_response.get("response", None)
+        }
+
     except Exception as e:
-        result = {"next_node": "none", "query": query, "reset_keys": []}
-    
-    logger.info(f"response of Router agent: {result}")
-
-    return result
-
-# def router_agent_executer(query:str)->str:
-#     logger.info(f"query: {query}")
-    
-#     agent=router_agent(query)
-#     if agent=="topic_learning_agent":
-#         output=learning_agent(query)
-#     elif agent=="youtube_post_agent":
-#         output=generate_youtube_content(query)
-#     elif agent=="article_post_agent":
-#         output=article_post_content(query)
-#     else:
-#         output="Currently this feature is not available, wait for future improvements"
-
-#     return output
+        logger.error(f"[Router Agent] Failed to parse router output: {e}")
+        return {
+            "next_node": "none",
+            "query": query,
+            "reset_keys": [],
+            "response": "Sorry, I could not understand that. Can you rephrase?"
+        }

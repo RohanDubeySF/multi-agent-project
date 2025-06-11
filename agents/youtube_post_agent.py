@@ -18,14 +18,6 @@ import ast
 model= ChatGoogleGenerativeAI(model="gemini-2.0-flash")
 model2=ChatGroq(model='llama-3.3-70b-versatile')
 
-def get_tool_output(intermediate_steps, tool_name: str) -> Optional[str]:
-    """
-    Extracts the output of a specific tool from intermediate steps.
-    """
-    for action, result in intermediate_steps:
-        if action.tool == tool_name:
-            return result if isinstance(result, str) else str(result)
-    return None
 def clean_and_parse_agent_output(agent_output: str) -> dict:
     # Step 1: Strip markdown-style code block markers
     cleaned = agent_output.strip()
@@ -78,10 +70,7 @@ def generate_youtube_content(query:str, intermediate_data: Optional[Dict[str, An
     response = init.invoke({"input":context})
     output=clean_and_parse_agent_output(response['output'])
     logger.debug(output)
+         
+    intermediate_data["last_summary"] = output["last_summary"]
 
-    if intermediate_data is not None:            
-        intermediate_data["last_summary"] = output["last_summary"]
-
-    return output["Post coontent"]
-
-
+    return output["Post coontent"],output["last_summary"]

@@ -50,3 +50,7 @@ youtube-search-python
 
 #Article Scraping
 newspaper3k 
+
+#memory
+pymongo 
+langgraph-checkpoint-mongodb

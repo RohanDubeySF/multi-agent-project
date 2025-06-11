@@ -1,6 +1,4 @@
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.sqlite import SqliteSaver
-import sqlite3
 from typing import TypedDict, Optional, Dict, Any, List,Annotated,Sequence
 from langchain_core.messages import BaseMessage
 from agents.youtube_post_agent import generate_youtube_content
@@ -9,30 +7,30 @@ from agents.article_post_agent import article_post_content
 from agents.router_agent import router_agent
 from langgraph.graph.message import add_messages
 from langgraph.checkpoint.sqlite import SqliteSaver
-import sqlite3 
-from langgraph.store.sqlite import SqliteStore
+import sqlite3
 
-def graph():
-        
+def graph():  
     class AgentState(TypedDict):
         query:str
         messages: Annotated[Sequence[BaseMessage], add_messages]
-        intermediate_data: Dict[str, Any]
+        intermediate_data: Optional[Dict[str, Any]]
         next_node:Optional[str]
         response:Optional[str]
 
     def router_node(state:AgentState)-> AgentState:
-        routing_result=router_agent(query=state['query'],chat_history=state.get("chat_history", []),intermediate_data=state.get("intermediate_data", {}))
+        routing_result=router_agent(query=state['query'],chat_history=state.get("messages", []),intermediate_data=state.get("intermediate_data", {}))
         state["query"]=routing_result.get('query',state["query"])
         state["next_node"] = routing_result.get("next_node", "none")
+        state["response"] = routing_result["response"]
 
         for key in routing_result.get("reset_keys", []):
             if key in state["intermediate_data"]:
                 state["intermediate_data"][key] = None
+
         return state
 
     def youtube_content_node(state:AgentState)-> AgentState:
-        state['response']= generate_youtube_content(query=state['query'],intermediate_data=state.get("intermediate_data", {}))
+        state['response'],state["intermediate_data['last_summary']"]= generate_youtube_content(query=state['query'],intermediate_data=state.get("intermediate_data", {}))
         return state
             
 
@@ -64,7 +62,7 @@ def graph():
             "topic_learning_agent":"course_finder",
             "youtube_post_agent":"youtube_content",
             "article_post_agent":"article_content",
-            "None":END
+            "none":END
         }
     )
 
@@ -72,14 +70,13 @@ def graph():
     graph.set_finish_point("youtube_content")
     graph.set_finish_point("course_finder")
     graph.set_finish_point("article_content")
+    graph.set_finish_point("Router_Agent") 
 
 
-    sqlite_conn=sqlite3.connect("checkpoint.sqlite",check_same_thread=False)
+    sqlite_conn=sqlite3.connect("checkpoint.db",check_same_thread=False)
     checkpointer=SqliteSaver(sqlite_conn)
 
-    store=SqliteStore.from_conn_string("sqlite:///langgraph_store.db")
-
-    return graph.compile(checkpointer=checkpointer,store=store)
+    return graph.compile(checkpointer=checkpointer)
 
 
 
