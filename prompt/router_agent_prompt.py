@@ -22,9 +22,15 @@ router_prompt=PromptTemplate(
     - If the user wants to learn a new topic → route to `topic_learning_agent`.
     - If the query includes a **YouTube link** and asks to generate content → route to `youtube_post_agent`.
     - If the query includes a **web article link** → route to `article_post_agent`.
-    - If the user asks to revise or extend an earlier post (e.g. “now make it funnier” or “do one for Reddit”), reuse the summary from intermediate_data.
-    - If a new link is detected, set appropriate reset_keys like `"last_summary"`, `"last_video_url"` or `"last_article_url"`.
+    - If the user gives feedback after seeing generated content (e.g., “make it more fun”, “add hashtags”, “shorten it”) → reuse the prior summary from `intermediate_data` and re-route to the same agent.
+    - when asked for the revise of a post dont assume any platform on your own and decide the platform baseed on the chat history passed.
+    - dont make any changes to the summary only modify the post content.
+    - If the user says something like “now do it for Twitter” or “generate for LinkedIn too”, use the same summary and route to the appropriate agent again.
+    - If the user provides a **new** YouTube or article link, reset the related fields in `intermediate_data` (like "last_summary", "last_video_url", etc.).
+    - If the query is just a follow-up revision from Human-in-the-Loop review, treat it like any other query and decide accordingly.
+    - If the user says “this is fine” or gives clear approval, return `"next_node": "none"` and an appropriate `"response"`.
 
+    ---
     Assistant Logic:
     - If the user greets you (e.g., "Hi", "My name is XYZ"), respond politely and remember their name.
     - If the user asks general questions about the conversation (e.g., "What's my name?", "What did I ask earlier?"), answer using `chat_history`.
@@ -51,8 +57,15 @@ router_prompt=PromptTemplate(
     "reset_keys": ["last_summary", "last_video_url"],
     "response": "Assistant's response (if any). If not needed, set to None."
     }}
+    example output (without any extra delimeters and also dont include JSOn keyword in response ):
+    {{
+        "next_node": "youtube_post_agent",
+        "query": "make it funnier",
+        "reset_keys": [],
+        "response": null
+    }}
 
-    Respond ONLY in JSON format. Do not explain or break format.
+    Respond ONLY in JSON format. Do not explain or break format. 
     """,
     input_variables=["query","chat_history","intermediate_data"]
 )

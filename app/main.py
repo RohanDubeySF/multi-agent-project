@@ -1,58 +1,40 @@
+# streamlit_app.py
 import streamlit as st
 from langchain_core.messages import HumanMessage, AIMessage
-from LangGraph_graph.Graph import graph  # This builds and compiles your LangGraph app
+from LangGraph_graph.Graph import GenAIMultiAgentRunner # Your compiled LangGraph app
+from utils.streamlit_utils import (
+    initialize_session,
+    display_chat_history,
+    handle_paused_state,
+    handle_chat_input
+)
 
-# === Session Initialization ===
-if "thread_id" not in st.session_state:
-    st.session_state.thread_id = "user-123"  # Can be dynamic later
-if "messages" not in st.session_state:
-    st.session_state.messages = []  # Store chat history
+# === UI Header ===
+st.set_page_config(page_title="Multi-Agent Assistant", page_icon="🧠")
+st.title("🧠 Multi-Agent Assistant")
+st.markdown(
+    """
+    Welcome to the Multi-Agent Assistant. This system uses a graph-based multi-agent setup. 
+    """
+)
 
-# === Get LangGraph App ===
+# === Initialize Session State ===
+initialize_session()
+
+# === Load Graph App ===
 @st.cache_resource
 def get_graph():
-    return graph()
+    return GenAIMultiAgentRunner()
 
-app = get_graph()
-
-# === App Title ===
-st.title("🧠 Multi-Agent Assistant")
+app = get_graph().get_app()
 
 # === Display Chat History ===
-for msg in st.session_state.messages:
-    role = "user" if isinstance(msg, HumanMessage) else "assistant"
-    with st.chat_message(role):
-        st.markdown(msg.content)
+display_chat_history(st.session_state.messages)
 
-# === Input Field ===
-if prompt := st.chat_input("Ask a question or request a post..."):
-    # Show user message
-    with st.chat_message("user"):
-        st.markdown(prompt)
+# === Handle HITL Pause State ===
+if st.session_state.paused_state:
+    handle_paused_state(app)
 
-    # Add user message to history
-    st.session_state.messages.append(HumanMessage(content=prompt))
-
-    # Prepare state for LangGraph
-    state = {
-        "query": prompt,
-        "messages": st.session_state.messages,
-        "next_node": None,
-        "response": None,
-    }
-
-    with st.spinner("Thinking..."):
-    # Call the graph
-        result = app.invoke(
-            state,
-            config={"configurable": {"thread_id": st.session_state.thread_id}}
-        )
-
-        # Get and show response
-        response = result.get("response", "(No response)")
-
-    with st.chat_message("assistant"):
-        st.markdown(response)
-
-    # Save response to history
-    st.session_state.messages.append(AIMessage(content=response))
+# === Handle Standard Chat Input ===
+else:
+    handle_chat_input(app)
