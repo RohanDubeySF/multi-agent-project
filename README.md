@@ -8,7 +8,7 @@ This project is a fully-functional, modular AI chatbot system built using **Lang
 - 📚 Retrieve curated learning resources from YouTube, Coursera, and Udemy
 - 🧠 Store conversation history persistently in a SQLite database
 - 🔁 Maintain long-term memory across sessions using `thread_id`
-- 👁️ Support human-in-the-loop and time-travel (future-ready)
+- 👁️ Support human-in-the-loop 
 
 ---
 
@@ -30,11 +30,19 @@ tool/                        # LangChain-compatible tools
 ├── reddit_tool.py           # Formats Reddit post from content
 
 prompt/                      # Prompt templates for agents
-└── router_agent_prompt.py   # Prompt logic for router agent
+├─ article_agent.py          # Prompt logic for article post agent
+├─ learning_agent.py         # Prompt logic for learning resource agent
+├─ linkedin_prompt.py        # Prompt logic for linkedin_post tool
+├─ reddit_prompt.py          # Prompt logic for reddit_post tool
+├─ router_agent_prompt.py    # Prompt logic for router agent
+├─ twitter_prompt.py         # Prompt logic for twitter_post tool
+└─ youtube_agent.py          # Prompt logic for youtube post agent
 
-graph.py                    # LangGraph node definitions and wiring
-streamlit_app.py            # Streamlit chatbot interface
-langgraph_memory.db         # SQLite-based persistent memory storage
+LangGraph_Graph/                      
+└── Graph.py                    # LangGraph node definitions and wiring
+
+app/                      
+└── main.py                  # Streamlit chatbot interface     
 README.md                   # Project documentation
 ```
 
@@ -102,6 +110,7 @@ history = checkpointer.get_message_history(thread_id)
 - Persistent memory in SQLite
 - Tool-driven agent execution with LangChain
 - Streamlit-based chatbot UI
+- Human in the Loop integration
 
 ---
 

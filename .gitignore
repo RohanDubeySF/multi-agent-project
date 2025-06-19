@@ -12,7 +12,7 @@ venv/
 .vscode/
 
 # Jupyter Notebooks
-.ipynb
+*.ipynb
 .ipynb_checkpoints
 
 # OS
